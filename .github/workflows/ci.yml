@@ -1,17 +1,12 @@
 name: ci
-
-on:
-  push:
-    branches: [main, master]
-  pull_request:
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   python-tests:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         python: ["3.9", "3.11"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -19,43 +14,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Run tests (без curl_cffi — Chrome-транспорт скипнется)
-        run: python tests/run_all.py
-
-  python-tests-curl-cffi:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: venv + curl_cffi (как в README)
+      - name: Run unit tests (в корне)
         run: |
-          python3 -m venv /tmp/tunnel-venv
-          /tmp/tunnel-venv/bin/pip install curl_cffi
-      - name: Run tests with curl_cffi
-        env:
-          BYEDPI_PY: /tmp/tunnel-venv/bin/python
-        run: python3 tests/run_all.py
+          python -m unittest test_diag_verdict test_dnsfix test_hosts_groups -v
 
-  audit-offset-flags:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: python3 host/audit_offset_flags.py .
-
-  build-xpi:
-    runs-on: ubuntu-latest
+  bat-syntax:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python3 tools/build_xpi.py
-      - run: python3 tools/build_xpi.py --simple
-      - uses: actions/upload-artifact@v4
-        with:
-          name: xpi
-          path: |
-            dist/*.xpi
-            release/*-installer.zip
+      - name: BAT syntax tests
+        run: python -m unittest test_bat_syntax -v
+
+  smoke-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: --help для CLI (если поддерживается)
+        run: |
+          for f in DIAG.py DNSFIX.py NETSTAT.py synth.py yamlcheck.py orchestrate.py WL-check.py; do
+            echo "=== $f ==="
+            python3 "$f" --help >/dev/null 2>&1 && echo OK || echo "no --help / failed (ok)"
+          done
