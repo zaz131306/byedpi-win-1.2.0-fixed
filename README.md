@@ -1,5 +1,5 @@
 # byedpi-firefox
-![ci](https://github.com/zaz131306/byedpi-win-1.2.0-fixed/actions/workflows/ci.yml/badge.svg)
+ ![ci](https://github.com/zaz131306/byedpi-win-1.2.0-fixed/actions/workflows/ci.yml/badge.svg)
 Управление локальным SOCKS5-прокси из Firefox: запуск/остановка, автоматическая прописка
 прокси в настройки браузера. Работает на Linux, macOS и Windows, без прав администратора.
 
