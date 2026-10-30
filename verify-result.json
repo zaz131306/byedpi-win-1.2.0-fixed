@@ -1,0 +1,284 @@
+{
+  "config": {
+    "host": "127.0.0.1",
+    "port": 1080,
+    "strategy": "custom",
+    "args": [
+      "--hosts",
+      ":rutor.info",
+      "--proto",
+      "t",
+      "-o1",
+      "-a1",
+      "-r-5+se",
+      "--auto=none",
+      "--split",
+      "1+h",
+      "--disorder",
+      "3+h",
+      "--auto=torst",
+      "--timeout",
+      "3",
+      "--tlsrec",
+      "1+s"
+    ]
+  },
+  "summary": {
+    "bypass_proven": [
+      "https://rutor.info/",
+      "https://rutor.is/",
+      "https://rutracker.org/"
+    ],
+    "not_blocked": [
+      "http://rutor.info/",
+      "http://rutor.is/"
+    ],
+    "blocked_fail": [],
+    "proxy_breaks": [
+      "http://rutracker.org/"
+    ],
+    "ip_blocked_suspect": []
+  },
+  "rows": [
+    {
+      "url": "https://rutor.info/",
+      "host": "rutor.info",
+      "code": "BYPASS_OK",
+      "note": "напрямую НЕ открывается, через прокси открылся — ОБХОД РАБОТАЕТ",
+      "direct": {
+        "ok": false,
+        "status_line": "",
+        "status_code": 0,
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "elapsed_ms": 167,
+        "bytes": 0
+      },
+      "via": {
+        "ok": true,
+        "status_line": "HTTP/1.1 200 OK",
+        "status_code": 200,
+        "detail": "HTTP/1.1 200 OK",
+        "elapsed_ms": 346,
+        "bytes": 4096,
+        "ca_note": "",
+        "ca_problem": false,
+        "cert_problem": false,
+        "cert_detail": ""
+      },
+      "via_good": true,
+      "via_why": "HTTP/1.1 200 OK",
+      "tls_direct": {
+        "state": "reset",
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "issuer": "",
+        "subject": ""
+      },
+      "tls_via": {
+        "state": "genuine",
+        "detail": "сертификат выдан YE1 для rutor.info",
+        "issuer": "YE1",
+        "subject": "rutor.info"
+      }
+    },
+    {
+      "url": "https://rutor.is/",
+      "host": "rutor.is",
+      "code": "BYPASS_OK",
+      "note": "напрямую НЕ открывается, через прокси открылся — ОБХОД РАБОТАЕТ",
+      "direct": {
+        "ok": false,
+        "status_line": "",
+        "status_code": 0,
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "elapsed_ms": 160,
+        "bytes": 0
+      },
+      "via": {
+        "ok": true,
+        "status_line": "HTTP/1.1 200 OK",
+        "status_code": 200,
+        "detail": "HTTP/1.1 200 OK",
+        "elapsed_ms": 717,
+        "bytes": 4096,
+        "ca_note": "",
+        "ca_problem": false,
+        "cert_problem": false,
+        "cert_detail": ""
+      },
+      "via_good": true,
+      "via_why": "HTTP/1.1 200 OK",
+      "tls_direct": {
+        "state": "reset",
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "issuer": "",
+        "subject": ""
+      },
+      "tls_via": {
+        "state": "genuine",
+        "detail": "сертификат выдан YE1 для rutor.is",
+        "issuer": "YE1",
+        "subject": "rutor.is"
+      }
+    },
+    {
+      "url": "https://rutracker.org/",
+      "host": "rutracker.org",
+      "code": "BYPASS_OK",
+      "note": "напрямую НЕ открывается, через прокси открылся — ОБХОД РАБОТАЕТ",
+      "direct": {
+        "ok": false,
+        "status_line": "",
+        "status_code": 0,
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "elapsed_ms": 152,
+        "bytes": 0
+      },
+      "via": {
+        "ok": true,
+        "status_line": "HTTP/1.1 301 Moved Permanently",
+        "status_code": 301,
+        "detail": "HTTP/1.1 301 Moved Permanently",
+        "elapsed_ms": 835,
+        "bytes": 794,
+        "ca_note": "",
+        "ca_problem": false,
+        "cert_problem": false,
+        "cert_detail": ""
+      },
+      "via_good": true,
+      "via_why": "HTTP/1.1 301 Moved Permanently",
+      "tls_direct": {
+        "state": "reset",
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "issuer": "",
+        "subject": ""
+      },
+      "tls_via": {
+        "state": "genuine",
+        "detail": "сертификат выдан WE1 для rutracker.org",
+        "issuer": "WE1",
+        "subject": "rutracker.org"
+      }
+    },
+    {
+      "url": "http://rutor.info/",
+      "host": "rutor.info",
+      "code": "NOT_BLOCKED",
+      "note": "открывается и напрямую — блокировки нет, доказательством не является",
+      "direct": {
+        "ok": true,
+        "status_line": "HTTP/1.1 200 OK",
+        "status_code": 200,
+        "detail": "",
+        "elapsed_ms": 420,
+        "bytes": 2048
+      },
+      "via": {
+        "ok": true,
+        "status_line": "HTTP/1.1 302 Moved Temporarily",
+        "status_code": 302,
+        "detail": "HTTP/1.1 302 Moved Temporarily",
+        "elapsed_ms": 3267,
+        "bytes": 229,
+        "ca_note": "",
+        "ca_problem": false,
+        "cert_problem": false,
+        "cert_detail": ""
+      },
+      "via_good": true,
+      "via_why": "HTTP/1.1 302 Moved Temporarily",
+      "tls_direct": {
+        "state": "reset",
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "issuer": "",
+        "subject": ""
+      },
+      "tls_via": {
+        "state": "genuine",
+        "detail": "сертификат выдан YE1 для rutor.info",
+        "issuer": "YE1",
+        "subject": "rutor.info"
+      }
+    },
+    {
+      "url": "http://rutor.is/",
+      "host": "rutor.is",
+      "code": "NOT_BLOCKED",
+      "note": "открывается и напрямую — блокировки нет, доказательством не является",
+      "direct": {
+        "ok": true,
+        "status_line": "HTTP/1.1 200 OK",
+        "status_code": 200,
+        "detail": "",
+        "elapsed_ms": 267,
+        "bytes": 2048
+      },
+      "via": {
+        "ok": true,
+        "status_line": "HTTP/1.1 302 Moved Temporarily",
+        "status_code": 302,
+        "detail": "HTTP/1.1 302 Moved Temporarily",
+        "elapsed_ms": 3318,
+        "bytes": 229,
+        "ca_note": "",
+        "ca_problem": false,
+        "cert_problem": false,
+        "cert_detail": ""
+      },
+      "via_good": true,
+      "via_why": "HTTP/1.1 302 Moved Temporarily",
+      "tls_direct": {
+        "state": "reset",
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "issuer": "",
+        "subject": ""
+      },
+      "tls_via": {
+        "state": "genuine",
+        "detail": "сертификат выдан YE1 для rutor.is",
+        "issuer": "YE1",
+        "subject": "rutor.is"
+      }
+    },
+    {
+      "url": "http://rutracker.org/",
+      "host": "rutracker.org",
+      "code": "PROXY_BREAKS",
+      "note": "напрямую работает, через прокси нет (TimeoutError: timed out) — прокси портит то, что и так работало",
+      "direct": {
+        "ok": true,
+        "status_line": "HTTP/1.1 200 OK",
+        "status_code": 200,
+        "detail": "",
+        "elapsed_ms": 300,
+        "bytes": 2048
+      },
+      "via": {
+        "ok": false,
+        "status_line": "",
+        "status_code": 0,
+        "detail": "TimeoutError: timed out",
+        "elapsed_ms": 12084,
+        "bytes": 0,
+        "ca_note": "",
+        "ca_problem": false,
+        "cert_problem": false,
+        "cert_detail": ""
+      },
+      "via_good": false,
+      "via_why": "TimeoutError: timed out",
+      "tls_direct": {
+        "state": "reset",
+        "detail": "ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение",
+        "issuer": "",
+        "subject": ""
+      },
+      "tls_via": {
+        "state": "genuine",
+        "detail": "сертификат выдан WE1 для rutracker.org",
+        "issuer": "WE1",
+        "subject": "rutracker.org"
+      }
+    }
+  ]
+}

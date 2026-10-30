@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Byedpi SOCKS5 Proxy — обход DPI",
+  "version": "1.2.0",
+  "description": "Управляет локальным SOCKS5-прокси ciadpi (byedpi): запуск/остановка, выбор стратегии обхода DPI, порт и аргументы. Трафик Firefox направляется через 127.0.0.1:1080 (SOCKS v5, DNS через прокси).",
+  "author": "byedpi-firefox",
+  "homepage_url": "https://github.com/hufrea/byedpi",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "byedpi-control@byedpi.local",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+  "permissions": [
+    "nativeMessaging",
+    "proxy",
+    "storage",
+    "alarms"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "action": {
+    "default_title": "Byedpi SOCKS5-прокси",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "options_ui": {
+    "page": "help.html",
+    "open_in_tab": true
+  }
+}

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Byedpi SOCKS5-прокси — инструкция</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--fg:#e8eaed;--mut:#9aa4b2;--acc:#4f8cff;--ok:#3ddc84;--err:#ff6b6b;--warn:#ffc857;--bd:#262b36}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:24px;margin:0 0 6px}
+h2{font-size:18px;margin:26px 0 10px;padding-top:14px;border-top:1px solid var(--bd)}
+h3{font-size:15px;margin:16px 0 6px;color:#cfe0ff}
+.lead{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin:12px 0}
+code,pre{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace}
+code{background:#0b0d12;border:1px solid var(--bd);border-radius:5px;padding:1px 5px;font-size:13px;color:#9fd0ff}
+pre{background:#0b0d12;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;overflow:auto;font-size:13px;color:#d6e2f5}
+ol,ul{padding-left:22px}
+li{margin:5px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--bd);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#1b2029;color:#cfe0ff;font-weight:600}
+.ok{color:var(--ok)}.err{color:var(--err)}.warn{color:var(--warn)}.mut{color:var(--mut)}
+kbd{background:#20252f;border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:12.5px}
+.tag{display:inline-block;background:#20252f;border:1px solid var(--bd);border-radius:999px;padding:1px 9px;font-size:12px;color:var(--mut);margin-right:6px}
+.toc{columns:2;font-size:14px}
+.toc a{color:#9fd0ff;text-decoration:none}
+.toc a:hover{text-decoration:underline}
+@media(max-width:640px){.toc{columns:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Byedpi SOCKS5-прокси · обход DPI</h1>
+<p class="lead">Расширение Firefox + локальный менеджер, который запускает движок
+<a href="https://github.com/hufrea/byedpi" target="_blank" rel="noreferrer">ciadpi (byedpi)</a>
+и направляет трафик браузера через SOCKS5 на <code>127.0.0.1:1080</code>.
+Прав администратора не требует, VPN не поднимает — только прокси для Firefox.</p>
+
+<div class="card">
+<b>Содержание</b>
+<div class="toc">
+<a href="#how">1. Как это устроено</a><br>
+<a href="#install">2. Установка (3 шага)</a><br>
+<a href="#firefox">3. Настройка Firefox</a><br>
+<a href="#http3">4. Обязательно: отключить HTTP/3</a><br>
+<a href="#strategies">5. Стратегии обхода DPI</a><br>
+<a href="#cli">6. Команды консоли (ctl.py)</a><br>
+<a href="#tests">7. Самопроверка</a><br>
+<a href="#trouble">8. Если не работает</a><br>
+<a href="#files">9. Файлы и где что лежит</a><br>
+<a href="#remove">10. Удаление</a><br>
+<a href="#security">11. Безопасность</a>
+</div>
+</div>
+
+<h2 id="how">1. Как это устроено</h2>
+<div class="card">
+<pre>
+Firefox (расширение)
+   │  browser.proxy.settings → SOCKS5 127.0.0.1:1080, DNS через прокси
+   │
+   ├─ Native Messaging (stdio, JSON) ──► host/native_host.py   (тонкий мост)
+   │                                          │  TCP 127.0.0.1 + токен
+   │                                          ▼
+   │                                     host/manager.py       (демон, владеет процессом)
+   │                                          │  subprocess.Popen
+   │                                          ▼
+   │                                     bin/ciadpi -i 127.0.0.1 -p 1080 &lt;стратегия&gt;
+   │                                          ▲
+   └─ трафик SOCKS5 ──────────────────────────┘
+
+Параллельные клиенты того же менеджера:
+   • host/ctl.py        — консоль
+   • web-интерфейс      — http://127.0.0.1:8787/?t=&lt;токен&gt;
+</pre>
+<p class="mut">SOCKS5-протокол реализован внутри ciadpi — своё мы не пишем.
+Менеджер вынесен в отдельный процесс специально: «засыпание» event-page расширения
+или закрытие попапа не обрывает прокси. Если клиентов не было
+<code>stop_after_disconnect_sec</code> секунд (по умолчанию 60), прокси аккуратно гаснет.</p>
+</div>
+
+<h2 id="install">2. Установка (3 шага)</h2>
+
+<h3>Шаг 1. Требования</h3>
+<div class="card">
+<ul>
+<li>Firefox 109+ (также работает в LibreWolf, Waterfox, Floorp).</li>
+<li>Python 3.8+ <span class="mut">(только стандартная библиотека, никаких pip-пакетов)</span>.
+  В Windows при установке Python отметьте <b>Add python.exe to PATH</b>.</li>
+<li>Windows 10/11 x64, Linux x86_64/i686/ARM или macOS <span class="mut">(для macOS бинарник нужно собрать вручную, см. ниже)</span>.</li>
+</ul>
+</div>
+
+<h3>Шаг 2. Скачать ciadpi и зарегистрировать хост</h3>
+<div class="card">
+<p>Одной командой:</p>
+<pre>
+<span class="mut"># Windows</span>
+install.bat
+
+<span class="mut"># Linux / macOS</span>
+chmod +x install.sh &amp;&amp; ./install.sh
+</pre>
+<p>Скрипт сделает то же, что и команды вручную:</p>
+<pre>
+python host/download_ciadpi.py      <span class="mut"># готовый бинарник из релизов hufrea/byedpi → bin/</span>
+python host/ctl.py install          <span class="mut"># манифест native-messaging хоста для Firefox</span>
+python host/ctl.py install --check  <span class="mut"># проверить, что всё встало</span>
+</pre>
+<p class="mut">Бинарник не компилируется и не встраивается в exe — он лежит отдельным файлом
+в <code>bin/</code>, его легко заменить или обновить.</p>
+<p><b>macOS:</b> готовых сборок в релизах нет, соберите сами и укажите путь:</p>
+<pre>
+git clone https://github.com/hufrea/byedpi &amp;&amp; cd byedpi &amp;&amp; make
+python host/ctl.py set binary=/путь/к/byedpi/ciadpi
+</pre>
+</div>
+
+<h3>Шаг 3. Загрузить расширение в Firefox</h3>
+<div class="card">
+<ol>
+<li>Откройте <code>about:debugging</code> → слева <b>Этот Firefox</b> (This Firefox).</li>
+<li>Нажмите <b>Загрузить временное дополнение…</b> (Load Temporary Add-on).</li>
+<li>Выберите файл <code>addon/manifest.json</code> в каталоге проекта.</li>
+<li>На тулбаре появится иконка — нажмите её и жмите <b>Подключить</b>.</li>
+</ol>
+<p class="mut">Временное дополнение снимается после перезапуска Firefox — для постоянной
+установки нужен подписанный <code>.xpi</code>: <code>python host/ctl.py install --extension</code>
+упакует и положит его в профиль (неподписанные xpi ставятся только в Nightly/ESR с
+<code>xpinstall.signatures.required=false</code>).</p>
+</div>
+
+<h2 id="firefox">3. Настройка Firefox</h2>
+<div class="card">
+<p><b>Вариант А (по умолчанию).</b> Расширение прописывает прокси само: достаточно нажать
+<b>Подключить</b>. В статусной строке попапа появится сообщение
+«Firefox направлен через SOCKS5 127.0.0.1:1080 (DNS через прокси)».</p>
+
+<p><b>Вариант Б (вручную).</b> Если автоматика не сработала или вы хотите настроить сами:</p>
+<ol>
+<li>Нажмите <b>Подключить</b> в попапе (или <code>python host/ctl.py start</code>).</li>
+<li>Firefox → <b>Настройки</b> → <b>Основные</b> → блок <b>Параметры сети</b> → <b>Настроить…</b></li>
+<li>Выберите <b>Ручная конфигурация прокси</b> (Manual proxy configuration).</li>
+<li>В поле <b>SOCKS-узел</b> (SOCKS Host) впишите <code>127.0.0.1</code>, порт <code>1080</code>.</li>
+<li>Версия прокси: <b>SOCKS v5</b>.</li>
+<li>Обязательно включите ☑ <b>Проксировать DNS при использовании SOCKS v5</b>
+    (<i>Proxy DNS when using SOCKS v5</i>) — иначе DNS-блокировки не обойдутся.</li>
+<li>Поля HTTP/HTTPS прокси оставьте пустыми. В «Не использовать прокси для» можно оставить
+    <code>localhost, 127.0.0.1, ::1</code>.</li>
+<li>OK.</li>
+</ol>
+<p class="mut">Оставшиеся пустыми поля HTTP-прокси означают, что весь трафик идёт через SOCKS5.</p>
+</div>
+
+<h2 id="http3">4. Обязательно: отключить HTTP/3 (QUIC)</h2>
+<div class="card">
+<p>QUIC — это UDP. Он <b>не проходит через SOCKS5-прокси</b>, поэтому часть сайтов
+продолжает открываться напрямую и блокируется, а часть — «виснет».</p>
+<ol>
+<li>Откройте <code>about:config</code>, примите предупреждение.</li>
+<li>Найдите <code>network.http.http3.enable</code> и переключите в <b>false</b>.</li>
+<li>Перезапустите Firefox.</li>
+</ol>
+<p>То же самое одной командой (правит <code>user.js</code> в профиле):</p>
+<pre>python host/ctl.py install --userjs</pre>
+<p class="mut">Дополнительно можно выставить <code>network.dns.http3_echconfig.enabled = false</code>
+и <code>network.http.http3.enable_quic = false</code> — скрипт это делает.</p>
+</div>
+
+<h2 id="strategies">5. Стратегии обхода DPI</h2>
+<div class="card">
+<p>Стратегия = набор аргументов ciadpi. Переключается в попапе или командой
+<code>python host/ctl.py set strategy=fake</code>. Прокси перезапускается автоматически.</p>
+<table>
+<tr><th>ID</th><th>Что делает</th><th>Аргументы (Linux / Windows)</th></tr>
+<tr><td><code>recommended</code></td><td>Десинхронизация + авто-переход на tlsrec при признаках блокировки. Начинайте отсюда.</td>
+<td><code>--disorder 1 --auto=torst --timeout 3 --tlsrec 1+s</code><br><code>--split 1+h --disorder 3+h --auto=torst --timeout 3 --tlsrec 1+s</code></td></tr>
+<tr><td><code>fake</code></td><td>Поддельный TLS ClientHello, который не доходит до сервера.</td>
+<td><code>--fake -1 --md5sig</code><br><code>--disorder 1 --fake -1</code></td></tr>
+<tr><td><code>fake-ttl</code></td><td>То же, но фейк гаснет по TTL. Универсальный вариант.</td><td><code>--fake -1 --ttl 8</code></td></tr>
+<tr><td><code>disorder</code></td><td>Нарушение порядка сегментов.</td><td><code>--disorder 1</code><br><code>--split 1+h --disorder 3+h</code></td></tr>
+<tr><td><code>oob</code></td><td>Внеканальный байт внутри SNI.</td><td><code>--auto=torst --timeout 3 --oob 3+h</code></td></tr>
+<tr><td><code>tlsrec</code></td><td>Разбиение TLS-записи, заголовок вставляется в середину SNI.</td><td><code>--auto=torst --timeout 3 --tlsrec 3+s</code></td></tr>
+<tr><td><code>aggressive</code></td><td>Несколько групп подбора — ciadpi перебирает их сам.</td><td>см. попап</td></tr>
+<tr><td><code>universal</code></td><td>Как <code>recommended</code>, но правила привязаны флагом <code>+h</code> — он работает и для TLS (позиция SNI), и для обычного HTTP (заголовок <code>Host</code>). Плюс <code>--mod-http h</code>.</td><td><code>--split 1+h --disorder 1 --mod-http h --auto=torst --timeout 3 --tlsrec 1+s</code><br><code>--split 1+h --disorder 3+h --mod-http h --auto=torst --timeout 3 --tlsrec 1+s</code></td></tr>
+<tr><td><code>http</code></td><td>Только HTTP: <code>+h</code> плюс <code>--mod-http h</code>.</td><td><code>--split 1+h --disorder 3+h --mod-http h</code></td></tr>
+<tr><td><code>ladder</code></td><td>Четыре группы, ciadpi перебирает их сам по триггеру <code>--auto=torst</code>. Нужен там, где DPI инжектит RST.</td><td>см. <code>host/strategies.py</code></td></tr>
+<tr><td><code>plain</code></td><td>Чистый SOCKS5 без обхода. Нужен для диагностики.</td><td>—</td></tr>
+<tr><td><code>custom</code></td><td>Ваши аргументы из поля «Свои аргументы ciadpi».</td><td>что вписали</td></tr>
+</table>
+<p class="mut">Подбор конкретных параметров под провайдера — это всегда эксперимент.
+Порядок действий: <code>recommended</code> → <code>universal</code> → <code>ladder</code> →
+<code>fake-ttl</code> → <code>python host/ctl.py pick --url САЙТ</code>.
+Если <code>verify.py</code> пишет «ПОХОЖЕ НА БЛОКИРОВКУ ПО IP» — аргументов
+ciadpi для такого сайта не существует вовсе, нужен туннель: см. <code>VPN.md</code>
+(AmneziaWG на своём VPS, с разбором граблей) и <code>tunnel/README.md</code>.
+<strong><code>pick</code> подбирает под один сайт</strong> и пишет победителя глобально —
+YouTube откроется, а трекер и Instagram нет. Чтобы у каждого домена была своя
+стратегия, нужен <code>python host/pick_multi.py --url http://rutor.info/
+--url https://www.instagram.com/ --url https://www.youtube.com/ --apply -y</code>:
+он подбирает по каждому адресу отдельно и склеивает победителей в доменные
+группы <code>--hosts</code> + <code>--proto</code>.
+Флаг <code>+s</code> привязывает правило к SNI и на обычном HTTP не срабатывает вовсе —
+для HTTP нужен <code>+h</code>, он покрывает оба протокола. Комбинации <code>+sh</code>
+в byedpi не существует: парсер молча превращает её в <code>+s</code>. Полный список флагов: <code>bin/ciadpi --help</code>
+и <a href="https://github.com/hufrea/byedpi/blob/master/README.md" target="_blank" rel="noreferrer">README byedpi</a>.</p>
+<p class="mut">Список кандидатов для автоподбора (<code>host/strategy_candidates.txt</code>)
+взят из Android-приложения
+<a href="https://github.com/EwenLoy/ByeByeDPI-x-tg" target="_blank" rel="noreferrer">ByeByeDPI x tg</a>
+(GPL-3.0), их файл <code>proxytest_strategies.list</code>, и доработан: исправлены
+флаги с молча отбрасываемым хвостом, добавлены кандидаты для обычного HTTP и
+дефолт самого приложения (<code>-o1 -a1 -r-5+se</code>), строки пересортированы так,
+чтобы первыми шли работающие на обоих протоколах. Сравнение подходов — в
+<code>FIX.md</code>, раздел 12: у них весь трафик забирает Android
+<code>VpnService</code> (TUN), здесь расширение Firefox работает без прав
+администратора и видит только браузер; подбор стратегий у них тоже есть,
+просто спрятан за кнопку «Проверка стратегий».</p>
+</div>
+
+<h2 id="cli">6. Команды консоли (ctl.py)</h2>
+<div class="card">
+<pre>
+python host/ctl.py status                 <span class="mut"># состояние, адрес, pid, стратегия</span>
+python host/ctl.py start                  <span class="mut"># запустить ciadpi</span>
+python host/ctl.py stop                   <span class="mut"># остановить и освободить порт</span>
+python host/ctl.py restart                <span class="mut"># перезапустить</span>
+python host/ctl.py selftest --start       <span class="mut"># порт → SOCKS5 → реальный HTTPS-запрос</span>
+python host/ctl.py logs -f                <span class="mut"># журнал ciadpi в реальном времени</span>
+python host/ctl.py args                   <span class="mut"># итоговая командная строка ciadpi</span>
+python host/ctl.py info                   <span class="mut"># бинарник, платформа, web-интерфейс</span>
+python host/ctl.py set port=1081          <span class="mut"># сменить порт (прокси перезапустится)</span>
+python host/ctl.py set strategy=fake      <span class="mut"># сменить стратегию</span>
+python host/ctl.py set advanced.debug_level=2   <span class="mut"># подробный лог ciadpi</span>
+python host/ctl.py get                    <span class="mut"># показать config.json</span>
+python host/ctl.py webui --open           <span class="mut"># локальная веб-панель управления</span>
+python host/ctl.py run                    <span class="mut"># менеджер в этом терминале (Ctrl+C — стоп)</span>
+python host/ctl.py shutdown               <span class="mut"># остановить менеджер и прокси</span>
+python host/ctl.py install --autostart    <span class="mut"># хост + автозапуск при входе в систему</span>
+python host/ctl.py doctor --url САЙТ      <span class="mut"># вся диагностика: хост, порт, TLS, пробы по сайтам</span>
+python host/pick_multi.py --url A --url B --apply -y  <span class="mut"># подбор под каждый сайт, группы --hosts</span>
+python host/check_tls.py                  <span class="mut"># какие корневые CA видит Python</span>
+python host/verify.py --quick             <span class="mut"># что РЕАЛЬНО работает: напрямую против через прокси</span>
+fix.bat                                   <span class="mut"># всё сразу: проверка → подбор под каждый сайт → перепроверка</span>
+</pre>
+</div>
+
+<h2 id="tests">7. Самопроверка</h2>
+<div class="card">
+<p>Полный набор проверок (соответствует разделу «что должно работать»):</p>
+<pre>python tests/run_all.py</pre>
+<p>Проверяется: наличие бинарника, запуск и появление слушающего порта, корректность
+SOCKS5-handshake, реальный запрос через прокси, остановка и освобождение порта,
+отсутствие «зависания» при выключенном прокси, идемпотентность повторного старта,
+поведение при занятом порте, сохранение настроек, протокол native-messaging,
+синтаксис JS расширения и валидность manifest.json.</p>
+<p>Быстрая ручная проверка:</p>
+<pre>
+python host/ctl.py start
+python host/ctl.py selftest https://www.google.com/
+python host/ctl.py stop
+</pre>
+</div>
+
+<h2 id="trouble">8. Если не работает</h2>
+<div class="card">
+<table>
+<tr><th>Симптом</th><th>Что делать</th></tr>
+<tr><td>В попапе «Native-messaging хост не установлен»</td>
+<td>Выполните <code>python host/ctl.py install</code>, затем <b>полностью</b> перезапустите Firefox
+(все окна). Проверьте <code>install --check</code>: путь в манифесте должен существовать.</td></tr>
+<tr><td>Бейдж «!», ciadpi не найден</td>
+<td><code>python host/download_ciadpi.py</code> или укажите путь: <code>ctl.py set binary=…</code>.
+На macOS бинарник собирается вручную.</td></tr>
+<tr><td>Порт уже занят</td>
+<td><code>ctl.py set port=1081</code>, либо закройте другое приложение (часто 1080 занимают
+Tor/other proxy). В Windows: <code>netstat -ano | findstr :1080</code>.</td></tr>
+<tr><td>Прокси работает, но сайты не открываются</td>
+<td>Отключите HTTP/3 (раздел 4). Попробуйте другую стратегию. Проверьте
+<code>ctl.py selftest</code>: если он проходит, а браузер нет — дело в настройках Firefox.</td></tr>
+<tr><td>Часть сайтов открывается, часть нет</td>
+<td>Почти всегда HTTP/3/QUIC или DoH. Отключите
+<code>network.trr.mode</code> = 5 (или 2 → 5) и <code>network.http.http3.enable</code> = false.</td></tr>
+<tr><td>Всё висит при выключенном прокси</td>
+<td>Firefox ждёт ответа от мёртвого прокси ~30 с. Нажмите «Отключить» в попапе —
+расширение снимет настройки прокси, и браузер вернётся к прямому соединению.</td></tr>
+<tr><td>Антивирус/SmartScreen ругается на ciadpi</td>
+<td>Это ложное срабатывание на инструмент модификации трафика. Файл берётся из
+официальных релизов hufrea/byedpi; SHA256 записывается в <code>bin/VERSION.json</code>.</td></tr>
+<tr><td>Ничего не понятно</td>
+<td><code>ctl.py set advanced.debug_level=2</code> → <code>ctl.py restart</code> →
+<code>ctl.py logs -f</code>. Плюс лог менеджера в каталоге настроек (<code>ctl.py info</code>).</td></tr>
+</table>
+</div>
+
+<h2 id="files">9. Файлы и где что лежит</h2>
+<div class="card">
+<pre>
+byedpi-firefox/
+├── addon/                  расширение Firefox (manifest v3)
+│   ├── manifest.json       ID: byedpi-control@byedpi.local
+│   ├── background.js       native-порт, browser.proxy.settings, бейдж
+│   ├── popup.html/css/js   панель управления
+│   └── help.html           эта страница
+├── host/                   Python-часть (только стандартная библиотека)
+│   ├── manager.py          демон: владеет ciadpi, control-сокет, web-интерфейс
+│   ├── proxy_core.py       ByedpiProxy: start/stop/status/logs/watchdog
+│   ├── native_host.py      мост Native Messaging ↔ менеджер
+│   ├── ctl.py              консоль
+│   ├── config.py           настройки (config.json)
+│   ├── strategies.py       пресеты аргументов обхода
+│   ├── netutil.py          проверки порта, SOCKS5-клиент, self-test
+│   ├── procutil.py         PID/lock/запуск detached
+│   ├── install.py          регистрация хоста, автозапуск, user.js, xpi
+│   ├── download_ciadpi.py  скачивание бинарника из релизов
+│   └── webui.py            локальная веб-панель
+├── bin/                    ciadpi (скачанный бинарник) + VERSION.json
+├── tests/                  проверки и интеграционный прогон
+├── install.sh / install.bat
+└── README.md
+</pre>
+<p>Пользовательские файлы (не в каталоге проекта):</p>
+<ul>
+<li><span class="tag">Windows</span> <code>%APPDATA%\byedpi-firefox\</code></li>
+<li><span class="tag">Linux</span> <code>~/.config/byedpi-firefox/</code></li>
+<li><span class="tag">macOS</span> <code>~/Library/Application Support/byedpi-firefox/</code></li>
+</ul>
+<p class="mut">Там лежат <code>config.json</code> (настройки), <code>manager.lock</code>
+(PID/токен/порт control-сокета), <code>status.json</code>, <code>ciadpi.log</code>,
+<code>manager.log</code>, <code>webui.url</code>.</p>
+</div>
+
+<h2 id="remove">10. Удаление</h2>
+<div class="card">
+<pre>
+python host/ctl.py shutdown              <span class="mut"># остановить прокси и менеджер</span>
+python host/ctl.py install --uninstall   <span class="mut"># убрать манифест хоста, автозапуск, наши строки в user.js</span>
+</pre>
+<p>Затем удалите расширение в <code>about:addons</code> и, при желании, каталог проекта
+и <code>~/.config/byedpi-firefox/</code> (или <code>%APPDATA%\byedpi-firefox\</code>).</p>
+</div>
+
+<h2 id="security">11. Безопасность</h2>
+<div class="card">
+<ul>
+<li>Прокси слушает <b>только loopback</b> (<code>127.0.0.1</code>) — из сети к нему не подобраться.
+Прав администратора не требуется.</li>
+<li>Control-сокет менеджера тоже на loopback и защищён случайным токеном из
+<code>manager.lock</code> (права 0600).</li>
+<li>Web-интерфейс открывается только по ссылке с токеном; без токена — 403.
+Команда <code>shutdown</code> из веб-панели запрещена.</li>
+<li>Расширение не запрашивает доступ к содержимому страниц и ничего не отправляет наружу:
+весь обмен идёт с локальным процессом.</li>
+<li>Бинарник ciadpi берётся из официальных релизов; SHA256 пишется в <code>bin/VERSION.json</code>.</li>
+<li class="warn">Инструмент модифицирует TLS-трафик для обхода блокировок. Используйте на своё
+усмотрение и с учётом законодательства вашей страны.</li>
+</ul>
+</div>
+
+<p class="mut" style="margin-top:30px">byedpi-firefox · оболочка над
+<a href="https://github.com/hufrea/byedpi" target="_blank" rel="noreferrer">byedpi/ciadpi</a> ·
+архитектура вдохновлена byedpi-gtk</p>
+
+</div>
+</body>
+</html>

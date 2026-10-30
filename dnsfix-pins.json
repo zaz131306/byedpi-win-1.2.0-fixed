@@ -1,0 +1,218 @@
+{
+ "time": "2026-10-30 14:41:27",
+ "pins": [
+  [
+   "193.46.255.29",
+   [
+    "rutor.info"
+   ]
+  ],
+  [
+   "193.46.255.26",
+   [
+    "rutor.is"
+   ]
+  ],
+  [
+   "179.43.157.101",
+   [
+    "new-rutor.org"
+   ]
+  ],
+  [
+   "104.21.32.39",
+   [
+    "rutracker.org"
+   ]
+  ]
+ ],
+ "doh_name": "AdGuard",
+ "doh_url": "https://dns.adguard-dns.com/dns-query",
+ "sinks": [
+  [
+   "188.186.154.79",
+   [
+    "new-rutor.org",
+    "rutor.info",
+    "rutor.is",
+    "rutracker.org",
+    "www.facebook.com",
+    "www.instagram.com"
+   ]
+  ],
+  [
+   "188.186.146.208",
+   [
+    "new-rutor.org",
+    "rutor.info",
+    "rutor.is",
+    "rutracker.org",
+    "www.facebook.com",
+    "www.instagram.com"
+   ]
+  ]
+ ],
+ "domains": [
+  "rutor.info",
+  "rutor.is",
+  "new-rutor.org",
+  "rutracker.org",
+  "www.instagram.com",
+  "www.facebook.com",
+  "x.com",
+  "www.youtube.com",
+  "www.google.com",
+  "gosuslugi.ru",
+  "vk.com"
+ ],
+ "probes": {
+  "rutor.info": {
+   "rows": [
+    {
+     "ip": "193.46.255.29",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    }
+   ],
+   "proxy_ok": false
+  },
+  "rutor.is": {
+   "rows": [
+    {
+     "ip": "193.46.255.26",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    }
+   ],
+   "proxy_ok": false
+  },
+  "new-rutor.org": {
+   "rows": [
+    {
+     "ip": "179.43.157.101",
+     "https": [
+      "tcp",
+      false,
+      0
+     ],
+     "http": [
+      "tcp",
+      false,
+      0
+     ]
+    }
+   ],
+   "proxy_ok": false
+  },
+  "rutracker.org": {
+   "rows": [
+    {
+     "ip": "104.21.32.39",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    },
+    {
+     "ip": "172.67.182.196",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    }
+   ],
+   "proxy_ok": false
+  },
+  "www.instagram.com": {
+   "rows": [
+    {
+     "ip": "157.240.0.174",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    },
+    {
+     "ip": "31.13.72.174",
+     "https": [
+      "tcp",
+      false,
+      0
+     ],
+     "http": [
+      "tcp",
+      false,
+      0
+     ]
+    }
+   ],
+   "proxy_ok": false
+  },
+  "www.facebook.com": {
+   "rows": [
+    {
+     "ip": "157.240.0.35",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    },
+    {
+     "ip": "31.13.72.36",
+     "https": [
+      "tls",
+      false,
+      0
+     ],
+     "http": [
+      "done",
+      true,
+      302
+     ]
+    }
+   ],
+   "proxy_ok": false
+  }
+ },
+ "from_hosts": true
+}

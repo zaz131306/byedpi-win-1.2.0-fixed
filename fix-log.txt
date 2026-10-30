@@ -1,0 +1,83 @@
+===== fix.bat zapushen 30.10.2026 14:42:34,20 =====
+katalog: C:\Users\Rabbit\Downloads\byedpi-win-1.2.0-fixed\byedpi-win-1.2.0-fixed
+komanda: 
+PYTHON: python
+===== SPISOK SAJTOV IZ dnsfix-pins.json =====
+[fix-urls] ��������� new-rutor.org � ���������� �� ������ (tcp �� �����������) � ����� �������
+[fix-urls] ���� https://rutor.info/
+[fix-urls] ���� https://rutor.is/
+[fix-urls] ���� https://rutracker.org/
+emit-fix-urls kod vozvrata: 0
+URLS: --url https://rutor.info/ --url https://rutor.is/ --url https://rutracker.org/
+===== SHAG 1: verify.py =====
+Проверка обхода: напрямую против через прокси
+  прокси    : 127.0.0.1:1080
+  порт слушается
+  целей     : 6
+
+── https://rutor.info/
+  [ОБХОД] напрямую НЕ открывается, через прокси открылся — ОБХОД РАБОТАЕТ
+      напрямую      : -                        ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      через прокси  : HTTP/1.1 200 OK          
+      TLS напрямую  : reset      ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      TLS ч/з прокси: genuine    сертификат выдан YE1 для rutor.info
+
+── https://rutor.is/
+  [ОБХОД] напрямую НЕ открывается, через прокси открылся — ОБХОД РАБОТАЕТ
+      напрямую      : -                        ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      через прокси  : HTTP/1.1 200 OK          
+      TLS напрямую  : reset      ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      TLS ч/з прокси: genuine    сертификат выдан YE1 для rutor.is
+
+── https://rutracker.org/
+  [ОБХОД] напрямую НЕ открывается, через прокси открылся — ОБХОД РАБОТАЕТ
+      напрямую      : -                        ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      через прокси  : HTTP/1.1 301 Moved Permanently 
+      TLS напрямую  : reset      ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      TLS ч/з прокси: genuine    сертификат выдан WE1 для rutracker.org
+
+── http://rutor.info/
+  [не блок] открывается и напрямую — блокировки нет, доказательством не является
+      напрямую      : HTTP/1.1 200 OK          
+      через прокси  : HTTP/1.1 302 Moved Temporarily 
+      TLS напрямую  : reset      ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      TLS ч/з прокси: genuine    сертификат выдан YE1 для rutor.info
+
+── http://rutor.is/
+  [не блок] открывается и напрямую — блокировки нет, доказательством не является
+      напрямую      : HTTP/1.1 200 OK          
+      через прокси  : HTTP/1.1 302 Moved Temporarily 
+      TLS напрямую  : reset      ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      TLS ч/з прокси: genuine    сертификат выдан YE1 для rutor.is
+
+── http://rutracker.org/
+  [ЛОМАЕТ] напрямую работает, через прокси нет (TimeoutError: timed out) — прокси портит то, что и так работало
+      напрямую      : HTTP/1.1 200 OK          
+      через прокси  : -                        TimeoutError: timed out
+      TLS напрямую  : reset      ConnectionResetError: [WinError 10054] Удаленный хост принудительн
+      TLS ч/з прокси: genuine    сертификат выдан WE1 для rutracker.org
+
+==========================================================================
+ВЫВОД
+==========================================================================
+  стратегия   : custom
+  аргументы   : --hosts :rutor.info --proto t -o1 -a1 -r-5+se --auto=none --split 1+h --disorder 3+h --auto=torst --timeout 3 --tlsrec 1+s
+
+  ПРОКСИ ЛОМАЕТ РАБОТАЮЩЕЕ:
+    - http://rutracker.org/
+  Это отдельная проблема: ciadpi портит трафик сайтов, которые
+  и так открывались. Обычно лечится сменой стратегии на более
+  мягкую (recommended -> plain для проверки).
+
+  ОБХОД DPI РАБОТАЕТ — доказано на:
+    + https://rutor.info/
+    + https://rutor.is/
+    + https://rutracker.org/
+
+  Справка: python host\doctor --url САЙТ — подробная диагностика,
+  python host\check_tls.py — сертификаты, FIX.md — разбор багов.
+
+  результат сохранён в C:\Users\Rabbit\Downloads\byedpi-win-1.2.0-fixed\byedpi-win-1.2.0-fixed\verify-result.json
+
+[runlog] код возврата: 0
+verify kod vozvrata: 0

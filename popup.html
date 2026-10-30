@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Byedpi SOCKS5-прокси</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <img src="icons/icon-48.png" alt="" width="26" height="26">
+      <div>
+        <div class="title">Byedpi · SOCKS5 с обходом DPI</div>
+        <div class="sub" id="hostLine">локальный прокси ciadpi</div>
+      </div>
+    </div>
+    <div class="pill" id="statePill"><span class="dot" id="dot"></span><span id="stateText">…</span></div>
+  </header>
+
+  <div class="addrbox">
+    <div>
+      <div class="lbl">Адрес прокси для Firefox</div>
+      <div class="addr" id="addr">127.0.0.1:1080</div>
+    </div>
+    <div class="right">
+      <div class="lbl">Протокол</div>
+      <div class="addr" id="proto">SOCKS v5</div>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+  <div class="note" id="proxyNote" hidden></div>
+
+  <div class="actions">
+    <button id="btnToggle" class="primary">Подключить</button>
+    <button id="btnRestart" class="ghost" title="Перезапустить ciadpi">Перезапуск</button>
+    <button id="btnTest" class="ghost" title="Проверить трафик через прокси">Проверка</button>
+  </div>
+
+  <section class="card">
+    <label for="strategy">Стратегия обхода DPI</label>
+    <select id="strategy"></select>
+    <div class="desc" id="strategyDesc"></div>
+    <div class="argv" id="argv" hidden></div>
+  </section>
+
+  <details class="card">
+    <summary>Настройки</summary>
+    <div class="grid2">
+      <div>
+        <label for="port">Порт</label>
+        <input id="port" type="number" min="1" max="65535" value="1080">
+      </div>
+      <div>
+        <label for="host">Адрес</label>
+        <input id="host" value="127.0.0.1">
+      </div>
+    </div>
+    <label for="custom">Свои аргументы ciadpi</label>
+    <textarea id="custom" rows="2" placeholder="--disorder 1 --auto=torst --timeout 3 --tlsrec 1+s"></textarea>
+    <div class="hint">Используются, когда выбрана стратегия «Свои аргументы».</div>
+
+    <label class="check"><input type="checkbox" id="applyFirefox"><span>Прописывать прокси в Firefox автоматически</span></label>
+    <label class="check"><input type="checkbox" id="proxyDns"><span>Проксировать DNS через SOCKS v5</span></label>
+    <label class="check"><input type="checkbox" id="autostart"><span>Запускать прокси вместе с браузером</span></label>
+    <label class="check"><input type="checkbox" id="autoRestart"><span>Перезапускать ciadpi при сбое</span></label>
+
+    <div class="actions small">
+      <button id="btnSave" class="primary small">Сохранить и применить</button>
+      <button id="btnHelp" class="ghost small">Инструкция</button>
+      <button id="btnWebui" class="ghost small">Web-панель</button>
+    </div>
+    <div class="saveMsg" id="saveMsg"></div>
+  </details>
+
+  <details class="card">
+    <summary>Журнал ciadpi</summary>
+    <pre id="log">—</pre>
+    <div class="actions small">
+      <button id="btnRefreshLog" class="ghost small">Обновить</button>
+      <button id="btnClearLog" class="ghost small">Очистить</button>
+    </div>
+  </details>
+
+  <div class="card" id="testCard" hidden>
+    <b>Проверка трафика</b>
+    <pre id="testOut"></pre>
+  </div>
+
+  <footer id="footer">
+    <span id="binInfo">ciadpi: …</span>
+    <span id="cfgInfo"></span>
+  </footer>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
